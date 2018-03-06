@@ -10,9 +10,9 @@ use Dingo\Api\Event\ResponseIsMorphing;
 use Dingo\Api\Event\ResponseWasMorphed;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Http\Response as IlluminateResponse;
-use Illuminate\Events\Dispatcher as EventDispatcher;
-use Dingo\Api\Transformer\Factory as TransformerFactory;
+use October\Events\Dispatcher as EventDispatcher;
 use Illuminate\Database\Eloquent\Model as EloquentModel;
+use Dingo\Api\Transformer\Factory as TransformerFactory;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 
@@ -38,13 +38,6 @@ class Response extends IlluminateResponse
      * @var array
      */
     protected static $formatters = [];
-
-    /**
-     * Array of formats' options.
-     *
-     * @var array
-     */
-    protected static $formatsOptions = [];
 
     /**
      * Transformer factory instance.
@@ -102,16 +95,7 @@ class Response extends IlluminateResponse
      */
     public static function makeFromJson(JsonResponse $json)
     {
-        $content = $json->getContent();
-
-        // If the contents of the JsonResponse does not starts with /**/ (typical laravel jsonp response)
-        // we assume that it is a valid json response that can be decoded, or we just use the raw jsonp
-        // contents for building the response
-        if (! starts_with($json->getContent(), '/**/')) {
-            $content = json_decode($json->getContent(), true);
-        }
-
-        $new = static::create($content, $json->getStatusCode());
+        $new = static::create(json_decode($json->getContent(), true), $json->getStatusCode());
 
         $new->headers = $json->headers;
 
@@ -136,8 +120,6 @@ class Response extends IlluminateResponse
         }
 
         $formatter = static::getFormatter($format);
-
-        $formatter->setOptions(static::getFormatsOptions($format));
 
         $defaultContentType = $this->headers->get('Content-Type');
 
@@ -256,46 +238,6 @@ class Response extends IlluminateResponse
     public static function setFormatters(array $formatters)
     {
         static::$formatters = $formatters;
-    }
-
-    /**
-     * Set the formats' options.
-     *
-     * @param array $formatsOptions
-     *
-     * @return void
-     */
-    public static function setFormatsOptions(array $formatsOptions)
-    {
-        static::$formatsOptions = $formatsOptions;
-    }
-
-    /**
-     * Get the format's options.
-     *
-     * @param string $format
-     *
-     * @return array
-     */
-    public static function getFormatsOptions($format)
-    {
-        if (! static::hasOptionsForFormat($format)) {
-            return [];
-        }
-
-        return static::$formatsOptions[$format];
-    }
-
-    /**
-     * Determine if any format's options were set.
-     *
-     * @param string $format
-     *
-     * @return bool
-     */
-    public static function hasOptionsForFormat($format)
-    {
-        return isset(static::$formatsOptions[$format]);
     }
 
     /**
