@@ -11,7 +11,7 @@ use Dingo\Api\Event\RequestWasMatched;
 use Dingo\Api\Http\Request as HttpRequest;
 use Illuminate\Contracts\Container\Container;
 use Dingo\Api\Contract\Debug\ExceptionHandler;
-use October\Events\Dispatcher as EventDispatcher;
+use Illuminate\Contracts\Events\Dispatcher as EventDispatcher;
 
 class Request
 {
